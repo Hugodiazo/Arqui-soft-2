@@ -1,23 +1,17 @@
-// search-api/main.go
 package main
 
 import (
 	"log"
 	"net/http"
 
-	"search-api/router"
-	"search-api/services"
-	"search-api/utils"
+	"search-app/search-api/clients"
+	"search-app/search-api/router"
 )
 
 func main() {
-	utils.ConnectRabbitMQ()
-	defer utils.CloseRabbitMQ()
-
-	go services.ProcessCourseUpdates() // Procesar actualizaciones de cursos
-
-	r := router.InitRoutes()
+	clients.ConnectRabbitMQ() // Conexión a RabbitMQ
+	r := router.InitRoutes()  // Inicializar las rutas
 
 	log.Println("API de búsqueda iniciada en http://localhost:8083")
-	http.ListenAndServe(":8083", r)
+	log.Fatal(http.ListenAndServe(":8083", r))
 }
