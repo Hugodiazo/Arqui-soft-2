@@ -6,17 +6,18 @@ import './MyCourses.css';
 
 const MyCourses = () => {
   const [courses, setCourses] = useState([]);
-  const { userId, token } = useContext(AuthContext);
+  const { isAuthenticated, userId, token } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!userId || !token) {
+    if (!isAuthenticated || !userId || !token) {
       navigate('/login');
       return;
     }
 
     const fetchMyCourses = async () => {
       try {
+        // Paso 1: Obtener las inscripciones del usuario
         const response = await fetch(`${API_BASE_URL}/enrollments/${userId}`, {
           headers: {
             'Content-Type': 'application/json',
@@ -28,8 +29,23 @@ const MyCourses = () => {
           throw new Error('Error al obtener tus cursos');
         }
 
-        const data = await response.json();
-        setCourses(data || []);
+        const enrollments = await response.json();
+
+        // Paso 2: Para cada `course_id`, obtener la información completa del curso
+        const courseDetailsPromises = enrollments.map(async (enrollment) => {
+          const courseResponse = await fetch(`${API_BASE_URL}/courses/${enrollment.course_id}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          return courseResponse.ok ? courseResponse.json() : null;
+        });
+
+        const courseDetails = await Promise.all(courseDetailsPromises);
+
+        // Filtrar cualquier valor `null` en caso de que alguna solicitud falle
+        setCourses(courseDetails.filter(course => course !== null));
       } catch (error) {
         console.error('Error al obtener tus cursos:', error);
         alert('Hubo un problema al obtener tus cursos');
@@ -37,16 +53,16 @@ const MyCourses = () => {
     };
 
     fetchMyCourses();
-  }, [userId, token, navigate]);
+  }, [isAuthenticated, userId, token, navigate]);
 
   return (
     <div className="my-courses">
       <h2>Mis Cursos</h2>
       {courses.length > 0 ? (
         courses.map((course) => (
-          <div key={course.id} className="course-item">
-            <h3>{course.title}</h3>
-            <p>{course.description}</p>
+          <div key={course.ID} className="course-item">
+            <h3>{course.Title || "Sin título"}</h3>
+            <p>{course.Description || "Sin descripción"}</p>
           </div>
         ))
       ) : (
