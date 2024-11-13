@@ -1,4 +1,3 @@
-// search-api/utils/rabbitmq.go
 package utils
 
 import (
@@ -20,6 +19,19 @@ func ConnectRabbitMQ() {
 	ch, err = conn.Channel()
 	if err != nil {
 		log.Fatalf("Error al crear canal en RabbitMQ: %v", err)
+	}
+
+	// Declarar la cola 'course_updates' para asegurarse de que exista
+	_, err = ch.QueueDeclare(
+		"course_updates", // name
+		true,             // durable
+		false,            // delete when unused
+		false,            // exclusive
+		false,            // no-wait
+		nil,              // arguments
+	)
+	if err != nil {
+		log.Fatalf("Error al declarar la cola 'course_updates': %v", err)
 	}
 }
 

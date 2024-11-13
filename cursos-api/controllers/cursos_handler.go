@@ -2,13 +2,17 @@
 package controllers
 
 import (
-	"cursos-app/cursos-api/domain"
-	"cursos-app/cursos-api/services"
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 
+	"cursos-app/cursos-api/db"
+	"cursos-app/cursos-api/domain"
+	"cursos-app/cursos-api/services"
+
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // Obtener todos los cursos
@@ -93,22 +97,46 @@ func EnrollCourseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handler para obtener los cursos en los que está inscrito un usuario
+func GetEnrollmentsByUser(userID string) ([]domain.Enrollment, error) {
+	var enrollments []domain.Enrollment
+	collection := db.MongoDB.Collection("enrollments") // Asegúrate de que esta colección exista en MongoDB
+	filter := bson.M{"user_id": userID}
+
+	cursor, err := collection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	for cursor.Next(context.TODO()) {
+		var enrollment domain.Enrollment
+		if err := cursor.Decode(&enrollment); err != nil {
+			return nil, err
+		}
+		enrollments = append(enrollments, enrollment)
+	}
+
+	return enrollments, nil
+}
+
+// Obtener inscripciones por usuario
 func GetEnrollmentsByUserHandler(w http.ResponseWriter, r *http.Request) {
-	// Extrae el user_id desde la URL
 	vars := mux.Vars(r)
-	userID, err := strconv.Atoi(vars["user_id"])
+	userIDStr := vars["user_id"]
+
+	// Convertir el userID de string a int
+	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
 		http.Error(w, "ID de usuario inválido", http.StatusBadRequest)
 		return
 	}
 
-	// Llama a la capa de servicio para obtener los cursos inscritos
-	courses, err := services.GetCoursesByUserID(userID)
+	enrollments, err := services.GetEnrollmentsByUser(userID)
 	if err != nil {
-		http.Error(w, "Error al obtener cursos inscritos", http.StatusInternalServerError)
+		http.Error(w, "Error al obtener inscripciones", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(courses)
+	json.NewEncoder(w).Encode(enrollments)
 }

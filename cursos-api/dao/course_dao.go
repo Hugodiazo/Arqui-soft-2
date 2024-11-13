@@ -44,33 +44,23 @@ func GetCourses() ([]domain.Course, error) {
 }
 
 // Obtener un curso por ID
-func GetCourseByID(id string) (domain.Course, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		log.Println("ID inválido:", err)
-		return domain.Course{}, err
-	}
+func GetCourseByID(id primitive.ObjectID) (domain.Course, error) {
 	var course domain.Course
-	err = db.MongoDB.Collection("courses").FindOne(context.TODO(), bson.M{"_id": objectID}).Decode(&course)
+	err := db.MongoDB.Collection("courses").FindOne(context.TODO(), bson.M{"_id": id}).Decode(&course)
 	if err != nil {
-		log.Println("Error al obtener curso:", err)
+		log.Println("Error al obtener el curso:", err)
 		return domain.Course{}, err
 	}
 	return course, nil
 }
 
 // Actualizar un curso por ID
-func UpdateCourse(id string, updatedCourse domain.Course) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		log.Println("ID inválido:", err)
-		return err
-	}
-
-	update := bson.M{
-		"$set": updatedCourse,
-	}
-	_, err = db.MongoDB.Collection("courses").UpdateOne(context.TODO(), bson.M{"_id": objectID}, update)
+func UpdateCourse(id primitive.ObjectID, updatedCourse domain.Course) error {
+	_, err := db.MongoDB.Collection("courses").UpdateOne(
+		context.TODO(),
+		bson.M{"_id": id},
+		bson.M{"$set": updatedCourse},
+	)
 	if err != nil {
 		log.Println("Error al actualizar el curso:", err)
 		return err
@@ -88,27 +78,24 @@ func CreateEnrollment(enrollment domain.Enrollment) error {
 	return nil
 }
 
-func GetCoursesByUserID(userID int) ([]domain.Course, error) {
-	var courses []domain.Course
-	ctx := context.TODO()
+func GetEnrollmentsByUser(userID int) ([]domain.Enrollment, error) {
+	var enrollments []domain.Enrollment
+	collection := db.MongoDB.Collection("enrollments")
+	filter := bson.M{"user_id": userID} // Asegúrate de que userID sea un entero
 
-	// Encuentra todas las inscripciones del usuario en enrollments
-	cursor, err := db.MongoDB.Collection("enrollments").Find(ctx, bson.M{"user_id": userID})
+	cursor, err := collection.Find(context.TODO(), filter)
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer cursor.Close(context.TODO())
 
-	// Para cada inscripción, encuentra el curso correspondiente en courses
-	for cursor.Next(ctx) {
+	for cursor.Next(context.TODO()) {
 		var enrollment domain.Enrollment
-		if err := cursor.Decode(&enrollment); err == nil {
-			courseID, _ := primitive.ObjectIDFromHex(enrollment.CourseID)
-			course := domain.Course{}
-			_ = db.MongoDB.Collection("courses").FindOne(ctx, bson.M{"_id": courseID}).Decode(&course)
-			courses = append(courses, course)
+		if err := cursor.Decode(&enrollment); err != nil {
+			return nil, err
 		}
+		enrollments = append(enrollments, enrollment)
 	}
 
-	return courses, nil
+	return enrollments, nil
 }
