@@ -10,4 +10,7 @@ require (
 	golang.org/x/crypto v0.29.0
 )
 
-require filippo.io/edwards25519 v1.1.0 // indirect
+require (
+	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+)

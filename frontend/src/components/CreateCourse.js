@@ -5,7 +5,7 @@ import AuthContext from "../context/AuthContext";
 import './CreateCourse.css';
 
 const CreateCourse = () => {
-  const { userRole } = useContext(AuthContext);
+  const { token } = useContext(AuthContext); // Obtener el token
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState('');
@@ -15,13 +15,7 @@ const CreateCourse = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (userRole !== 'admin') {
-      alert('No tienes permiso para crear un curso');
-      return;
-    }
-
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/courses`, {
         method: 'POST',
         headers: {

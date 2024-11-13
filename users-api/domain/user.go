@@ -18,7 +18,9 @@ type Credentials struct {
 }
 
 // Estructura de las claims para el token JWT
-type JWTClaims struct {
-	UserID int `json:"user_id"`
+
+type Claims struct {
+	UserID int    `json:"user_id"`
+	Role   string `json:"role"`
 	jwt.StandardClaims
 }

@@ -15,24 +15,21 @@ var jwtKey = []byte("your_secret_key")
 
 // Registrar un nuevo usuario
 func RegisterUser(user domain.User) error {
-	// Verifica si el usuario ya existe
 	existingUser, _ := dao.GetUserByEmail(user.Email)
 	if existingUser.ID != 0 {
 		return errors.New("usuario ya existe")
 	}
 
-	// Hashear la contraseña antes de guardarla
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
 		return err
 	}
 	user.Password = hashedPassword
 
-	// Insertar el usuario en la base de datos
 	return dao.CreateUser(user)
 }
 
-// Iniciar sesión y generar JWT
+// Iniciar sesión y generar JWT con rol
 func LoginUser(credentials domain.Credentials) (string, error) {
 	// Buscar el usuario por email
 	user, err := dao.GetUserByEmail(credentials.Email)
@@ -40,14 +37,16 @@ func LoginUser(credentials domain.Credentials) (string, error) {
 		return "", errors.New("credenciales inválidas")
 	}
 
-	// Crear el token JWT
+	// Crear el token JWT con Claims, incluyendo el rol
 	expirationTime := time.Now().Add(24 * time.Hour)
-	claims := &domain.JWTClaims{
+	claims := &domain.Claims{
 		UserID: user.ID,
+		Role:   user.Role,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
 	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtKey)
 }

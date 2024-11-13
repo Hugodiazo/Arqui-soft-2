@@ -36,6 +36,7 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Llama al servicio para obtener el token y el rol
 	token, err := services.LoginUser(credentials)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)

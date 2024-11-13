@@ -15,7 +15,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${USERS_API_URL}/users/login`, {
+      const response = await fetch(`${USERS_API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -24,7 +24,7 @@ function Login() {
       const data = await response.json();
       if (response.ok && data.token) {
         console.log("Login response:", data);
-        login(data.token);
+        login(data.token); // Pasa el token para que el contexto lo maneje
         setMessage('Inicio de sesión exitoso');
       } else {
         setMessage('Credenciales incorrectas');

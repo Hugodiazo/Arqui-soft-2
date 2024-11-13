@@ -5,7 +5,7 @@ import AuthContext from "../context/AuthContext";
 import './Navbar.css';
 
 const Navbar = () => {
-  const { isAuthenticated, logout } = useContext(AuthContext);
+  const { isAuthenticated, logout, userRole } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -19,14 +19,19 @@ const Navbar = () => {
         <li className="navbar-item">
           <Link to="/" className="navbar-link">Home</Link>
         </li>
+        <li className="navbar-item">
+          <Link to="/courses" className="navbar-link">Cursos</Link>
+        </li>
         {isAuthenticated && (
           <>
             <li className="navbar-item">
               <Link to="/my-courses" className="navbar-link">Mis Cursos</Link>
             </li>
-            <li className="navbar-item">
-              <Link to="/create-course" className="navbar-link">Crear Curso</Link>
-            </li>
+            {userRole === 'admin' && ( // Verifica si el usuario es administrador
+              <li className="navbar-item">
+                <Link to="/create-course" className="navbar-link">Crear Curso</Link>
+              </li>
+            )}
             <li className="navbar-item">
               <button className="logout-button" onClick={handleLogout}>
                 Cerrar Sesión
