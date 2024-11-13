@@ -43,7 +43,18 @@ function Home() {
       }
 
       const data = await response.json();
-      setCourses(query.trim() ? data : data); // Ajusta según la estructura de la respuesta
+
+      // Ajuste en los datos para manejar diferentes estructuras de respuesta
+      const formattedData = data.map(course => ({
+        ID: course.ID || course.id,
+        Title: course.Title || course.title,
+        Description: course.Description || course.description,
+        Instructor: course.Instructor || course.instructor,
+        Duration: course.Duration || course.duration,
+        Level: course.Level || course.level
+      }));
+
+      setCourses(formattedData);
     } catch (error) {
       console.error('Error al buscar cursos:', error);
       alert('Hubo un problema al realizar la búsqueda');

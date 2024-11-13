@@ -19,9 +19,6 @@ const Navbar = () => {
         <li className="navbar-item">
           <Link to="/" className="navbar-link">Home</Link>
         </li>
-        <li className="navbar-item">
-          <Link to="/courses" className="navbar-link">Cursos</Link>
-        </li>
         {isAuthenticated && (
           <>
             <li className="navbar-item">
