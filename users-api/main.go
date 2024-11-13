@@ -26,6 +26,9 @@ func main() {
 	// Conectar a la base de datos
 	db.ConnectDB()
 
+	// Conectar a Memcached
+	db.ConnectCache()
+
 	// Configurar las rutas
 	r := router.InitRoutes()
 
