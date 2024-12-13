@@ -1,0 +1,135 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - app-network
+
+  mongodb:
+    image: mongo:4.4
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+    environment:
+      - MONGO_INITDB_DATABASE=cursos
+      # Si quieres añadir autenticación, descomenta las siguientes líneas
+      # - MONGO_INITDB_ROOT_USERNAME=admin
+      # - MONGO_INITDB_ROOT_PASSWORD=secret
+
+  solr:
+    image: solr:8.11.4
+    container_name: solr
+    ports:
+      - "8983:8983"
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr-precreate
+      - cursos
+    networks:
+      - app-network
+
+  memcached:
+    image: memcached:1.6
+    container_name: memcached
+    ports:
+      - "11212:11211"
+    networks:
+      - app-network
+
+  users-api:
+    build:
+      context: ./users-api
+    container_name: users-api
+    environment:
+      DB_HOST: mysql
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_NAME: mydb
+      MEMCACHED_HOST: memcached
+      MEMCACHED_PORT: 11211
+    depends_on:
+      mysql:
+        condition: service_healthy
+      memcached:
+        condition: service_started
+    networks:
+      - app-network
+
+  cursos-api:
+    build:
+      context: ./cursos-api
+    container_name: cursos-api
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/cursos
+      - DB_NAME=cursos
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    networks:
+      - app-network
+    command: ["./wait-for-it.sh", "rabbitmq:5672", "--", "./cursos-api"]
+
+  search-api:
+    build:
+      context: ./search-api
+    container_name: search-api
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      SOLR_HOST: solr
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      solr:
+        condition: service_started
+    networks:
+      - app-network
+    command: ["./wait-for-it.sh", "rabbitmq:5672", "-t", "30", "--", "./search-api"]
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - users-api
+      - cursos-api
+      - search-api
+    networks:
+      - app-network
+
+volumes:
+  mysql-data:
+
+networks:
+  app-network:
+    driver: bridge

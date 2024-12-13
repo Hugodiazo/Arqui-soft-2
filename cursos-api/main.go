@@ -4,6 +4,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"cursos-app/cursos-api/clients"
 	"cursos-app/cursos-api/db"
@@ -25,8 +26,13 @@ func enableCors(next http.Handler) http.Handler {
 }
 
 func main() {
+	// Obtener la URI y el nombre de la base de datos desde variables de entorno
+	mongoURI := os.Getenv("MONGO_URI")
+	dbName := os.Getenv("DB_NAME")
+
 	// Conexión a MongoDB
-	db.ConnectMongoDB("mongodb://localhost:27017", "arqsoft2")
+	db.ConnectMongoDB(mongoURI, dbName)
+
 	// Conexión a RabbitMQ
 	clients.ConnectRabbitMQ()
 
@@ -36,8 +42,9 @@ func main() {
 	// Aplicar middleware CORS a las rutas
 	handler := enableCors(r)
 
-	log.Println("API de cursos iniciada en http://localhost:8081")
-	if err := http.ListenAndServe(":8081", handler); err != nil {
+	// Iniciar el servidor en el puerto 8080
+	log.Println("API de cursos iniciada en http://localhost:8080")
+	if err := http.ListenAndServe(":8080", handler); err != nil {
 		log.Fatal(err)
 	}
 }

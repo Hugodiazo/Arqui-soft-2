@@ -1,4 +1,3 @@
-// db/db.go
 package db
 
 import (
@@ -13,7 +12,7 @@ var DB *sql.DB
 // ConnectDB inicializa la conexión a la base de datos
 func ConnectDB() {
 	var err error
-	DB, err = sql.Open("mysql", "root:Pirata02@tcp(localhost:3306)/arqsoft2")
+	DB, err = sql.Open("mysql", "root:Pirata02@tcp(mysql:3306)/arqsoft2")
 	if err != nil {
 		log.Fatal("Error al conectar con la base de datos:", err)
 	}

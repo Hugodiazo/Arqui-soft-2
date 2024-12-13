@@ -1,4 +1,3 @@
-// cursos-api/db/mongodb.go
 package db
 
 import (
@@ -12,7 +11,7 @@ import (
 
 var MongoDB *mongo.Database
 
-// Conectar a MongoDB
+// Conectar a MongoDB con parámetros uri y dbName
 func ConnectMongoDB(uri, dbName string) {
 	clientOptions := options.Client().ApplyURI(uri)
 	client, err := mongo.Connect(context.TODO(), clientOptions)

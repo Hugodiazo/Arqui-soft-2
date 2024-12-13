@@ -13,7 +13,7 @@ var RabbitMQChannel *amqp.Channel
 // ConnectRabbitMQ establece la conexión con RabbitMQ
 func ConnectRabbitMQ() {
 	var err error
-	RabbitMQConn, err = amqp.Dial("amqp://guest:guest@localhost:5672/")
+	RabbitMQConn, err = amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
 	if err != nil {
 		log.Fatalf("Error al conectar con RabbitMQ: %s", err)
 	}
