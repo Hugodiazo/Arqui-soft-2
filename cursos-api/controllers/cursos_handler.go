@@ -140,3 +140,18 @@ func GetEnrollmentsByUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(enrollments)
 }
+
+// DeleteCourseHandler maneja la eliminación de un curso por su ID
+func DeleteCourseHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	courseID := params["id"]
+
+	err := services.DeleteCourseService(courseID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Curso eliminado con éxito"})
+}

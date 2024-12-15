@@ -5,6 +5,7 @@ package services
 import (
 	"cursos-app/cursos-api/dao"
 	"cursos-app/cursos-api/domain"
+	"errors"
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -42,4 +43,18 @@ func EnrollCourse(enrollment domain.Enrollment) error {
 
 func GetEnrollmentsByUser(userID int) ([]domain.Enrollment, error) {
 	return dao.GetEnrollmentsByUser(userID)
+}
+
+// DeleteCourseService llama al DAO para eliminar un curso
+func DeleteCourseService(courseID string) error {
+	deletedCount, err := dao.DeleteCourseDAO(courseID)
+	if err != nil {
+		return err
+	}
+
+	if deletedCount == 0 {
+		return errors.New("Curso no encontrado")
+	}
+
+	return nil
 }

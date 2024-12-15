@@ -2,16 +2,19 @@ package services
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	"users-app/users-api/dao"
 	"users-app/users-api/domain"
 	"users-app/users-api/utils"
 
+	"os"
+
 	"github.com/golang-jwt/jwt"
 )
 
-var jwtKey = []byte("your_secret_key")
+var jwtKey = []byte(os.Getenv("SECRET_KEY"))
 
 // Registrar un nuevo usuario
 func RegisterUser(user domain.User) error {
@@ -20,24 +23,30 @@ func RegisterUser(user domain.User) error {
 		return errors.New("usuario ya existe")
 	}
 
-	hashedPassword, err := utils.HashPassword(user.Password)
-	if err != nil {
-		return err
-	}
-	user.Password = hashedPassword
-
+	// No es necesario hashear aquí, ya se hizo en el controlador
 	return dao.CreateUser(user)
 }
 
 // Iniciar sesión y generar JWT con rol
 func LoginUser(credentials domain.Credentials) (string, error) {
-	// Buscar el usuario por email
+	log.Println("Buscando usuario por email:", credentials.Email)
+
 	user, err := dao.GetUserByEmail(credentials.Email)
-	if err != nil || !utils.CheckPasswordHash(credentials.Password, user.Password) {
+	if err != nil {
+		log.Println("Error al obtener usuario:", err)
+		return "", errors.New("usuario no encontrado")
+	}
+
+	log.Println("Usuario encontrado:", user.Email)
+	log.Println("Comparando contraseñas")
+
+	if !utils.CheckPasswordHash(credentials.Password, user.Password) {
+		log.Println("La contraseña no coincide")
 		return "", errors.New("credenciales inválidas")
 	}
 
-	// Crear el token JWT con Claims, incluyendo el rol
+	log.Println("Contraseña válida. Generando token.")
+
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &domain.Claims{
 		UserID: user.ID,
@@ -48,7 +57,7 @@ func LoginUser(credentials domain.Credentials) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtKey)
+	return token.SignedString(utils.SecretKey)
 }
 
 // Obtener todos los usuarios

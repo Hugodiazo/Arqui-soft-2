@@ -26,5 +26,7 @@ func ConnectMongoDB(uri, dbName string) {
 	}
 
 	MongoDB = client.Database(dbName)
-	fmt.Println("Conexión a MongoDB establecida con éxito")
+
+	// Agrega este log para confirmar que se está conectando a la base de datos correcta
+	fmt.Printf("Conectado a MongoDB en URI: %s y base de datos: %s\n", uri, dbName)
 }

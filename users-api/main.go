@@ -41,8 +41,8 @@ func main() {
 	// Aplicar el middleware de CORS
 	handler := enableCors(r)
 
-	log.Println("API de usuarios iniciada en http://localhost:8082")
-	if err := http.ListenAndServe(":8082", handler); err != nil {
+	log.Println("API de usuarios iniciada en http://localhost:8080")
+	if err := http.ListenAndServe(":8080", handler); err != nil {
 		log.Fatal(err)
 	}
 }

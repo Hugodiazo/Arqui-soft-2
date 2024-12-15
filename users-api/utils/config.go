@@ -5,8 +5,6 @@ import (
 	"os"
 )
 
-var SecretKey []byte
-
 func init() {
 	key := os.Getenv("SECRET_KEY")
 	if key == "" {

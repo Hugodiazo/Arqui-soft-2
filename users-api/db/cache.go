@@ -1,8 +1,8 @@
-// users-api/db/cache.go
 package db
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
@@ -11,7 +11,11 @@ import (
 var Cache *memcache.Client
 
 func ConnectCache() {
-	Cache = memcache.New("localhost:11211")
+	memcachedHost := os.Getenv("MEMCACHED_HOST")
+	memcachedPort := os.Getenv("MEMCACHED_PORT")
+	memcachedAddress := memcachedHost + ":" + memcachedPort
+
+	Cache = memcache.New(memcachedAddress)
 	err := Cache.Ping()
 	if err != nil {
 		log.Fatal("No se pudo conectar a Memcached:", err)

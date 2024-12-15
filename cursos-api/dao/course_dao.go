@@ -38,8 +38,15 @@ func GetCourses() ([]domain.Course, error) {
 			log.Println("Error al decodificar curso:", err)
 			continue
 		}
+		log.Printf("Curso encontrado: %+v\n", course)
 		courses = append(courses, course)
 	}
+
+	if len(courses) == 0 {
+		log.Println("No se encontraron cursos en la base de datos.")
+	}
+
+	log.Printf("Cursos encontrados: %+v\n", courses) // Log para ver los cursos obtenidos
 	return courses, nil
 }
 
@@ -98,4 +105,20 @@ func GetEnrollmentsByUser(userID int) ([]domain.Enrollment, error) {
 	}
 
 	return enrollments, nil
+}
+
+// DeleteCourseDAO elimina un curso de la base de datos por su ID
+func DeleteCourseDAO(courseID string) (int64, error) {
+	id, err := primitive.ObjectIDFromHex(courseID)
+	if err != nil {
+		return 0, err
+	}
+
+	collection := db.MongoDB.Collection("courses")
+	res, err := collection.DeleteOne(context.TODO(), bson.M{"_id": id})
+	if err != nil {
+		return 0, err
+	}
+
+	return res.DeletedCount, nil
 }

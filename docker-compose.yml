@@ -41,6 +41,8 @@ services:
       # Si quieres añadir autenticación, descomenta las siguientes líneas
       # - MONGO_INITDB_ROOT_USERNAME=admin
       # - MONGO_INITDB_ROOT_PASSWORD=secret
+    volumes:
+      - mongodb_data:/data/db  # Volumen persistente  
 
   solr:
     image: solr:8.11.4
@@ -65,30 +67,38 @@ services:
   users-api:
     build:
       context: ./users-api
+      dockerfile: Dockerfile  # Si tienes un Dockerfile específico
     container_name: users-api
     environment:
-      DB_HOST: mysql
-      DB_USER: user
-      DB_PASSWORD: password
-      DB_NAME: mydb
+      SECRET_KEY: "Pirata02"            # Cambiar por una clave más segura en producción
+      DB_HOST: mysql                    # Verifica que el nombre del servicio sea correcto
+      DB_USER: root                     # Actualizado al usuario que realmente usas en MySQL
+      DB_PASSWORD: root                 # Actualizado a la contraseña correcta de MySQL
+      DB_NAME: arqsoft2                 # Asegúrate de que coincide con la base de datos creada
       MEMCACHED_HOST: memcached
       MEMCACHED_PORT: 11211
+    ports:
+      - "8082:8080"                    # Mapeo correcto del puerto
     depends_on:
       mysql:
-        condition: service_healthy
+        condition: service_healthy     # Se asegura de que MySQL esté listo antes de levantar `users-api`
       memcached:
         condition: service_started
     networks:
-      - app-network
+      - app-network                    # Verifica que `app-network` esté definido en `docker-compose.yml`
+    restart: unless-stopped            # Reinicia automáticamente si el contenedor falla
+
 
   cursos-api:
     build:
       context: ./cursos-api
     container_name: cursos-api
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/cursos
-      - DB_NAME=cursos
+      - MONGO_URI=mongodb://mongodb:27017
+      - DB_NAME=arqsoft2
       - RABBITMQ_HOST=rabbitmq
+    ports:
+      - "8081:8080"  
     depends_on:
       mongodb:
         condition: service_started
@@ -105,6 +115,8 @@ services:
     environment:
       RABBITMQ_HOST: rabbitmq
       SOLR_HOST: solr
+    ports:
+      - "8083:8080"  
     depends_on:
       rabbitmq:
         condition: service_started
@@ -129,6 +141,7 @@ services:
 
 volumes:
   mysql-data:
+  mongodb_data:
 
 networks:
   app-network:

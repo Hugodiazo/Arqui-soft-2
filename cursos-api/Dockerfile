@@ -13,4 +13,4 @@ RUN go build -o cursos-api
 
 EXPOSE 8080
 
-CMD ["/wait-for-it.sh", "rabbitmq:5672", "--", "./cursos-api"]
+CMD ["./wait-for-it.sh", "rabbitmq:5672", "-t", "30", "--", "./cursos-api"]

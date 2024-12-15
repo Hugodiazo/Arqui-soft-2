@@ -1,4 +1,3 @@
-// src/pages/Home.js
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
@@ -7,20 +6,23 @@ function Home() {
   const [query, setQuery] = useState('');
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
+      setError(null);
       try {
         const response = await fetch('http://localhost:8081/courses');
         if (!response.ok) {
           throw new Error('Error al obtener los cursos');
         }
         const data = await response.json();
-        setCourses(data);
+        setCourses(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error al obtener los cursos:', error);
-        alert('Hubo un problema al obtener los cursos');
+        setError('Hubo un problema al obtener los cursos');
+        setCourses([]);
       } finally {
         setLoading(false);
       }
@@ -32,6 +34,7 @@ function Home() {
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
       const response = query.trim()
@@ -44,20 +47,23 @@ function Home() {
 
       const data = await response.json();
 
-      // Ajuste en los datos para manejar diferentes estructuras de respuesta
-      const formattedData = data.map(course => ({
-        ID: course.ID || course.id,
-        Title: course.Title || course.title,
-        Description: course.Description || course.description,
-        Instructor: course.Instructor || course.instructor,
-        Duration: course.Duration || course.duration,
-        Level: course.Level || course.level
-      }));
+      // Asegúrate de que los datos sean un array
+      const formattedData = Array.isArray(data)
+        ? data.map(course => ({
+            ID: course.ID || course.id,
+            Title: course.Title || course.title,
+            Description: course.Description || course.description,
+            Instructor: course.Instructor || course.instructor,
+            Duration: course.Duration || course.duration,
+            Level: course.Level || course.level,
+          }))
+        : [];
 
       setCourses(formattedData);
     } catch (error) {
       console.error('Error al buscar cursos:', error);
-      alert('Hubo un problema al realizar la búsqueda');
+      setError('Hubo un problema al realizar la búsqueda');
+      setCourses([]);
     } finally {
       setLoading(false);
     }
@@ -75,9 +81,12 @@ function Home() {
         />
         <button type="submit">Buscar</button>
       </form>
+
       {loading && <p>Cargando...</p>}
+      {error && <p className="error">{error}</p>}
+
       <div className="courses">
-        {courses.length > 0 ? (
+        {Array.isArray(courses) && courses.length > 0 ? (
           courses.map((course) => (
             <div key={course.ID} className="course-item">
               <Link to={`/courses/${course.ID}`}>
@@ -90,7 +99,7 @@ function Home() {
             </div>
           ))
         ) : (
-          <p>No se encontraron cursos.</p>
+          !loading && <p>No se encontraron cursos.</p>
         )}
       </div>
     </div>
