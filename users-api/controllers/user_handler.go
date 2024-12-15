@@ -128,6 +128,7 @@ func ProtectedHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// AdminHandler es un ejemplo de una ruta protegida por AdminMiddleware
 func AdminHandler(w http.ResponseWriter, r *http.Request) {
 	response := map[string]string{
 		"message": "¡Accediste a una ruta de administrador!",

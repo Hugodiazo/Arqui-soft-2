@@ -17,7 +17,7 @@ type Credentials struct {
 	Password string `json:"password"`
 }
 
-// Claims define las claims del token JWT
+// Claims representa los claims del token JWT
 type Claims struct {
 	UserID int    `json:"user_id"`
 	Role   string `json:"role"`
